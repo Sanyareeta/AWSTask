@@ -27,7 +27,7 @@ import java.util.UUID;
 		logsExpiration = RetentionSetting.SYNDICATE_ALIASES_SPECIFIED
 )
 @EnvironmentVariables(value = {
-		@EnvironmentVariable(key = "target_table", value = "${target_table}") // Environment variable for the DynamoDB table name
+		@EnvironmentVariable(key = "target_table", value = "${target_table}")
 })
 public class ApiHandler implements RequestHandler<Map<String, Object>, Map<String, Object>> {
 
@@ -69,12 +69,11 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 
 			Map<String, Object> response = new HashMap<>();
 			response.put("statusCode", 201);
-			response.put("event", eventItem.toJSON());
+			response.put("event", eventItem.asMap());
 			Map<String, String> headers = new HashMap<>();
 			headers.put("Content-Type", "application/json");
 
-			response.put("headers", headers);
-			return response;
+
 			return response;
 
 		} catch (Exception e) {
@@ -82,7 +81,7 @@ public class ApiHandler implements RequestHandler<Map<String, Object>, Map<Strin
 
 
 			Map<String, Object> errorResponse = new HashMap<>();
-			errorResponse.put("statusCode", 500); // HTTP status code for 'Internal Server Error'
+			errorResponse.put("statusCode", 500);
 			errorResponse.put("error", "An error occurred while saving the event: " + e.getMessage());
 
 			return errorResponse;
