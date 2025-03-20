@@ -1,8 +1,8 @@
-#if($ctx.error)
-  $util.error($ctx.error.message, $ctx.error.type)
-#end
-
 {
-  "id": "$context.result.id",
-  "createdAt": "$context.result.createdAt"
+  "version": "2018-05-29",
+  "operation": "GetItem",
+  "key": {
+    "id": $util.dynamodb.toDynamoDBJson($ctx.args.id)
+  }
 }
+
