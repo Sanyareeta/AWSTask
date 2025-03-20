@@ -3,7 +3,7 @@
 #end
 
 {
-  "id": { "S": $id },
-  "createdAt": { "S": $createdAt },
-
+  "id": "$context.result.id",
+  "createdAt": "$context.result.createdAt"
 }
+
