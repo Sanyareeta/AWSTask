@@ -5,11 +5,6 @@
         {
           "Action": [
             "logs:CreateLogGroup",
-            "dynamodb:GetItem",
-            "dynamodb:Query",
-            "dynamodb:PutItem",
-            "dynamodb:Batch*",
-            "dynamodb:DeleteItem",
             "logs:CreateLogStream",
             "logs:PutLogEvents",
             "dynamodb:GetItem",
@@ -59,7 +54,6 @@
         "POST": {
           "authorization_type": "NONE",
           "integration_type": "lambda",
-          "enable_proxy": true,
           "lambda_name": "api_handler",
           "api_key_required": false,
           "method_request_parameters": {},
@@ -67,7 +61,8 @@
           "responses": [],
           "integration_responses": [],
           "default_error_pattern": true
-        }
+        },
+        "enable_proxy": true
       }
     },
     "tags": {}
