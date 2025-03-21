@@ -1,6 +1,7 @@
 import AWS from 'aws-sdk';
 import { v4 as uuidv4 } from 'uuid';
 
+// Initialize AWS services
 const dynamodb = new AWS.DynamoDB.DocumentClient();
 const cognito = new AWS.CognitoIdentityServiceProvider();
 
@@ -54,15 +55,6 @@ export const handler = async (event, context) => {
 // Helper functions for CORS headers
 function corsHeaders() {
   return {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type,Authorization',
-    'Access-Control-Allow-Methods': 'OPTIONS,POST,GET',
-    'Content-Type': 'application/json'
-  };
-}
-
-function corsHeaders() {
-  return {
     'Access-Control-Allow-Headers': 'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token',
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': '*',
@@ -70,6 +62,14 @@ function corsHeaders() {
   };
 }
 
+// Helper function for formatting responses
+function formatResponse(statusCode, body) {
+  return {
+    statusCode: statusCode,
+    headers: corsHeaders(),
+    body: JSON.stringify(body)
+  };
+}
 
 // SignUp handler
 async function handleSignup(event) {
@@ -112,6 +112,7 @@ async function handleSignup(event) {
   }
 }
 
+//Signin Handler
 async function handleSignin(event) {
   try {
     const { email, password } = JSON.parse(event.body);
@@ -142,7 +143,6 @@ async function handleSignin(event) {
     return formatResponse(400, { error: "Authentication failed." });
   }
 }
-
 // Table View
 async function handleGetTables(event) {
   const username = getUsernameFromToken(event);
