@@ -16,7 +16,15 @@ class WeatherClient {
                 }
             });
 
-            console.log("Weather API Response:", JSON.stringify(response.data, null, 2)); // Debugging
+            // Log the entire response to help with debugging
+            console.log("Weather API Response:", JSON.stringify(response.data, null, 2));
+
+            // Check if hourly data is present and return it
+            if (!response.data || !response.data.hourly) {
+                console.error("Hourly data is missing in the response.");
+                throw new Error("Missing hourly data in weather API response.");
+            }
+
             return response.data;
         } catch (error) {
             console.error("Error fetching weather data:", error.message);
@@ -29,6 +37,11 @@ exports.handler = async (event) => {
     const path = event.rawPath;
     const method = event.requestContext.http.method;
 
+    // Log path and method to debug the request
+    console.log("Request path:", path);
+    console.log("Request method:", method);
+
+    // Check if the path and method are correct
     if (path !== "/weather" || method !== "GET") {
         return {
             statusCode: 400,
@@ -45,6 +58,7 @@ exports.handler = async (event) => {
         const weatherClient = new WeatherClient();
         const weatherData = await weatherClient.getWeather(50.4375, 30.5);
 
+        // Return successful response with weather data
         return {
             statusCode: 200,
             body: JSON.stringify(weatherData),
@@ -52,6 +66,10 @@ exports.handler = async (event) => {
             isBase64Encoded: false
         };
     } catch (error) {
+        // Log any error from the weather client
+        console.error("Error in weather client:", error.message);
+
+        // Return 500 Internal Server Error in case of failure
         return {
             statusCode: 500,
             body: JSON.stringify({ error: "Internal Server Error" }),
@@ -60,4 +78,3 @@ exports.handler = async (event) => {
         };
     }
 };
-
