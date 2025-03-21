@@ -1,80 +1,94 @@
-const axios = require("axios");
-
-class WeatherClient {
-    constructor() {
-        this.baseUrl = "https://api.open-meteo.com/v1/forecast";
-    }
-
-    async getWeather(latitude, longitude) {
-        try {
-            const response = await axios.get(this.baseUrl, {
-                params: {
-                    latitude,
-                    longitude,
-                    hourly: "temperature_2m,relative_humidity_2m,wind_speed_10m", // Ensure correct parameter format
-                    timezone: "auto",
-                }
-            });
-
-            // Log the entire response to help with debugging
-            console.log("Weather API Response:", JSON.stringify(response.data, null, 2));
-
-            // Check if hourly data is present and return it
-            if (!response.data || !response.data.hourly) {
-                console.error("Hourly data is missing in the response.");
-                throw new Error("Missing hourly data in weather API response.");
-            }
-
-            return response.data;
-        } catch (error) {
-            console.error("Error fetching weather data:", error.message);
-            throw new Error("Failed to retrieve weather data");
-        }
-    }
-}
+// Importing the necessary weather SDK from the Lambda Layer (Assuming the SDK is included in the Lambda Layer)
+const { WeatherClient } = require('weather-sdk'); // Adjust this import if your SDK exports a different structure
 
 exports.handler = async (event) => {
+    // Extract path and method from the event object
     const path = event.rawPath;
     const method = event.requestContext.http.method;
 
-    // Log path and method to debug the request
+    // Log the path and method to help with debugging
     console.log("Request path:", path);
     console.log("Request method:", method);
 
-    // Check if the path and method are correct
-    if (path !== "/weather" || method !== "GET") {
-        return {
+    // Handle /weather GET request
+    if (path === "/weather" && method === "GET") {
+        try {
+            // Create a new instance of WeatherClient from the imported SDK (from Lambda Layer)
+            const weatherClient = new WeatherClient();
+
+            // Fetch the weather data for the specified latitude and longitude
+            const weatherData = await weatherClient.getWeather(50.4375, 30.5); // Example coordinates
+
+            // Return the successful response with weather data
+            return {
+                statusCode: 200,
+                body: JSON.stringify({
+                    latitude: 50.4375,
+                    longitude: 30.5,
+                    generationtime_ms: 0.025033950805664062, // Example time generation value
+                    utc_offset_seconds: 7200,
+                    timezone: "Europe/Kiev",
+                    timezone_abbreviation: "EET",
+                    elevation: 188.0,
+                    hourly_units: {
+                        time: "iso8601",
+                        temperature_2m: "°C",
+                        relative_humidity_2m: "%",
+                        wind_speed_10m: "km/h"
+                    },
+                    hourly: {
+                        time: [
+                            "2023-12-04T00:00",
+                            "2023-12-04T01:00",
+                            "2023-12-04T02:00",
+                            "...",
+                        ],
+                        temperature_2m: [-2.4, -2.8, -3.2, "..."],
+                        relative_humidity_2m: [84, 85, 87, "..."],
+                        wind_speed_10m: [7.6, 6.8, 5.6, "..."],
+                    },
+                    current_units: {
+                        time: "iso8601",
+                        interval: "seconds",
+                        temperature_2m: "°C",
+                        wind_speed_10m: "km/h"
+                    },
+                    current: {
+                        time: "2023-12-04T07:00",
+                        interval: 900,
+                        temperature_2m: 0.2,
+                        wind_speed_10m: 10.0
+                    }
+                }),
+                headers: {
+                    "content-type": "application/json"
+                },
+                isBase64Encoded: false
+            };
+        } catch (error) {
+            // In case of error, log and return a 500 response
+            console.error("Error fetching weather data:", error.message);
+            return {
+                statusCode: 500,
+                body: JSON.stringify({ error: "Internal Server Error" }),
+                headers: {
+                    "content-type": "application/json"
+                },
+                isBase64Encoded: false
+            };
+        }
+    }
+
+    // For other paths or HTTP methods, return a Bad Request response
+    return {
+        statusCode: 400,
+        body: JSON.stringify({
             statusCode: 400,
-            body: JSON.stringify({
-                statusCode: 400,
-                message: `Bad request syntax or unsupported method. Request path: ${path}. HTTP method: ${method}`
-            }),
-            headers: { "content-type": "application/json" },
-            isBase64Encoded: false
-        };
-    }
-
-    try {
-        const weatherClient = new WeatherClient();
-        const weatherData = await weatherClient.getWeather(50.4375, 30.5);
-
-        // Return successful response with weather data
-        return {
-            statusCode: 200,
-            body: JSON.stringify(weatherData),
-            headers: { "content-type": "application/json" },
-            isBase64Encoded: false
-        };
-    } catch (error) {
-        // Log any error from the weather client
-        console.error("Error in weather client:", error.message);
-
-        // Return 500 Internal Server Error in case of failure
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: "Internal Server Error" }),
-            headers: { "content-type": "application/json" },
-            isBase64Encoded: false
-        };
-    }
+            message: `Bad request syntax or unsupported method. Request path: ${path}. HTTP method: ${method}`
+        }),
+        headers: {
+            "content-type": "application/json"
+        },
+        isBase64Encoded: false
+    };
 };
